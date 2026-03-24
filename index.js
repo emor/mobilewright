@@ -1,0 +1,2 @@
+// mobilewright
+module.exports = {};
