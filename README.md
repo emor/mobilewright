@@ -37,7 +37,7 @@ await device.close();
 ## Prerequisites
 
 - Node.js >= 18
-- A booted iOS simulator, Android emulator, or connected physical device
+- A booted iOS simulator, Android emulator, or connected real device
 
 ## Packages
 
@@ -80,7 +80,7 @@ const devices = await android.devices();
 `launch()` handles the full lifecycle:
 1. Checks if mobilecli is reachable (auto-starts it for local URLs if not running)
 2. Checks mobilecli version (warns if older than minimum supported)
-3. Discovers booted devices (prefers simulators over physical devices)
+3. Discovers booted devices (prefers simulators over real devices)
 4. Connects and optionally launches the app
 5. On `device.close()`, kills the auto-started server
 
@@ -284,7 +284,7 @@ Example output:
 ```
 ID                                      Name                     Platform  Type        State
 -------------------------------------------------------------------------------------------------
-00008110-0011281A112A801E               VPhone                   ios       physical    booted
+00008110-0011281A112A801E               VPhone                   ios       real-device    booted
 5A5FCFCA-27EC-4D1B-B412-BAE629154EE0    iPhone 17 Pro            ios       simulator   booted
 ```
 
