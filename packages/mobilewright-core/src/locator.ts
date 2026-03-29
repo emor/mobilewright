@@ -47,6 +47,10 @@ export class Locator {
     return this.child({ kind: 'role', value: role, name: opts?.name });
   }
 
+  getByPlaceholder(placeholder: string, opts?: { exact?: boolean }): Locator {
+    return this.child({ kind: 'placeholder', value: placeholder, exact: opts?.exact });
+  }
+
   private child(childStrategy: LocatorStrategy): Locator {
     return new Locator(
       this.driver,
@@ -105,9 +109,29 @@ export class Locator {
     return node !== null && node.isEnabled;
   }
 
+  async isSelected(opts?: { timeout?: number }): Promise<boolean> {
+    const node = await this.resolve(opts?.timeout ?? 0);
+    return node !== null && node.isSelected === true;
+  }
+
+  async isFocused(opts?: { timeout?: number }): Promise<boolean> {
+    const node = await this.resolve(opts?.timeout ?? 0);
+    return node !== null && node.isFocused === true;
+  }
+
+  async isChecked(opts?: { timeout?: number }): Promise<boolean> {
+    const node = await this.resolve(opts?.timeout ?? 0);
+    return node !== null && node.isChecked === true;
+  }
+
   async getText(opts?: { timeout?: number }): Promise<string> {
     const node = await this.resolveVisible(opts?.timeout);
     return node.text ?? node.label ?? node.value ?? '';
+  }
+
+  async getValue(opts?: { timeout?: number }): Promise<string> {
+    const node = await this.resolveVisible(opts?.timeout);
+    return node.value ?? '';
   }
 
   async waitFor(opts?: {

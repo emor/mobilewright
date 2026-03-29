@@ -66,6 +66,68 @@ class LocatorAssertions {
     );
   }
 
+  async toBeDisabled(opts?: ExpectOptions): Promise<void> {
+    await this.retryUntil(
+      () => this.locator.isEnabled({ timeout: 0 }),
+      (enabled) => (this.negated ? enabled : !enabled),
+      opts?.timeout ?? DEFAULT_TIMEOUT,
+      this.negated
+        ? 'Expected element to NOT be disabled, but it was'
+        : 'Expected element to be disabled, but it was not',
+    );
+  }
+
+  async toBeSelected(opts?: ExpectOptions): Promise<void> {
+    await this.retryUntil(
+      () => this.locator.isSelected({ timeout: 0 }),
+      (selected) => (this.negated ? !selected : selected),
+      opts?.timeout ?? DEFAULT_TIMEOUT,
+      this.negated
+        ? 'Expected element to NOT be selected, but it was'
+        : 'Expected element to be selected, but it was not',
+    );
+  }
+
+  async toHaveFocus(opts?: ExpectOptions): Promise<void> {
+    await this.retryUntil(
+      () => this.locator.isFocused({ timeout: 0 }),
+      (focused) => (this.negated ? !focused : focused),
+      opts?.timeout ?? DEFAULT_TIMEOUT,
+      this.negated
+        ? 'Expected element to NOT have focus, but it did'
+        : 'Expected element to have focus, but it did not',
+    );
+  }
+
+  async toBeChecked(opts?: ExpectOptions): Promise<void> {
+    await this.retryUntil(
+      () => this.locator.isChecked({ timeout: 0 }),
+      (checked) => (this.negated ? !checked : checked),
+      opts?.timeout ?? DEFAULT_TIMEOUT,
+      this.negated
+        ? 'Expected element to NOT be checked, but it was'
+        : 'Expected element to be checked, but it was not',
+    );
+  }
+
+  async toHaveValue(expected: string | RegExp, opts?: ExpectOptions): Promise<void> {
+    let lastValue = '';
+    await this.retryUntil(
+      async () => {
+        try { lastValue = await this.locator.getValue({ timeout: 0 }); } catch { lastValue = ''; }
+        return lastValue;
+      },
+      (value) => {
+        const matches = expected instanceof RegExp ? expected.test(value) : value === expected;
+        return this.negated ? !matches : matches;
+      },
+      opts?.timeout ?? DEFAULT_TIMEOUT,
+      () => this.negated
+        ? `Expected element NOT to have value "${expected}", but got "${lastValue}"`
+        : `Expected element to have value "${expected}", but got "${lastValue}"`,
+    );
+  }
+
   private async assertText(
     predicate: (text: string) => boolean,
     expected: string | RegExp,

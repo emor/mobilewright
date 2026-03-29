@@ -205,16 +205,18 @@ await expect(locator).toBeVisible({ timeout: 10_000 });
 
 | Role | iOS | Android |
 |---|---|---|
-| `button` | Button, ImageButton | Button, ImageButton |
-| `textfield` | TextField, SecureTextField, SearchField | EditText |
-| `text` | StaticText | TextView, Text |
-| `image` | Image | ImageView |
+| `button` | Button, ImageButton | Button, ImageButton, ReactViewGroup* |
+| `textfield` | TextField, SecureTextField, SearchField | EditText, ReactEditText |
+| `text` | StaticText | TextView, Text, ReactTextView |
+| `image` | Image | ImageView, ReactImageView |
 | `switch` | Switch | Switch, Toggle |
 | `checkbox` | -- | Checkbox |
 | `slider` | Slider | SeekBar |
-| `list` | Table, CollectionView, ScrollView | ListView, RecyclerView |
+| `list` | Table, CollectionView, ScrollView | ListView, RecyclerView, ReactScrollView |
 | `header` | NavigationBar | Toolbar |
 | `link` | Link | Link |
+
+\* ReactViewGroup matches `button` only when the element has `clickable="true"` or `accessible="true"` in its raw attributes, to avoid false positives since React Native uses ReactViewGroup for all container views.
 
 Falls back to direct type matching if no mapping exists.
 
@@ -294,4 +296,20 @@ ID                                      Name                     Platform  Type 
 # Run all unit tests
 npm test
 ```
+
+## Framework Support
+
+| Framework | iOS | Android | Notes |
+|---|---|---|---|
+| UIKit / Storyboards | ✅ | — | Full native element types, all locators work |
+| SwiftUI | ✅ | — | Maps to standard `XCUIElementType` accessibility tree |
+| Jetpack Compose | — | ✅ | Renders to native Android accessibility nodes |
+| Android Views (XML layouts) | — | ✅ | Full native element types, all locators work |
+| React Native | ✅ | ✅ | Uses real native components; RN-specific types mapped to roles |
+| Expo | ✅ | ✅ | Same as React Native (Expo builds to RN) |
+| Flutter | ⏳ | ⏳ | Renders via Skia/Impeller, not native views — requires Dart VM Service driver |
+| .NET MAUI | ✅ | ✅ | Compiles to native controls on both platforms |
+| Kotlin Multiplatform (shared UI) | ⏳ | ✅ | Android native works; iOS Compose Multiplatform support in progress |
+| Cordova / Capacitor | ✅ | ✅ | WebView content accessible via native accessibility tree |
+| NativeScript | ✅ | ✅ | Renders to native views on both platforms |
 

@@ -11,6 +11,8 @@ export interface ViewNode {
   type: string;
   label?: string;
   identifier?: string;
+  /** Full Android resource-id (e.g. "com.example:id/login_button") */
+  resourceId?: string;
   value?: string;
   text?: string;
   placeholder?: string;
@@ -19,6 +21,7 @@ export interface ViewNode {
   isEnabled: boolean;
   isSelected?: boolean;
   isFocused?: boolean;
+  isChecked?: boolean;
 
   bounds: Bounds;
   children: ViewNode[];
