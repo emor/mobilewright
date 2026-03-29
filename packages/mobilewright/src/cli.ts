@@ -7,6 +7,8 @@ import { resolve } from 'node:path';
 import { MobilecliDriver, DEFAULT_URL } from '@mobilewright/driver-mobilecli';
 import { ensureMobilecliReachable } from './server.js';
 
+const HTML_REPORT_DIR = 'mobilewright-report';
+
 const program = new Command();
 program.name('mobilewright');
 program.version('0.0.1');
@@ -35,7 +37,11 @@ program
     if (opts.workers) overrides.workers = opts.workers;
     if (opts.reporter) {
       const names = (opts.reporter as string).split(',');
-      overrides.reporter = names.map((name: string) => [name.trim()]);
+      overrides.reporter = names.map((name: string) => {
+        const n = name.trim();
+        if (n === 'html') return [n, { outputFolder: HTML_REPORT_DIR }];
+        return [n];
+      });
     }
 
     // Default to mobilewright.config.{ts,js} if no --config is given.
