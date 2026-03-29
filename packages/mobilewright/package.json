@@ -18,6 +18,11 @@
   "bin": {
     "mobilewright": "./dist/cli.js"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mobile-next/mobilewright",
+    "directory": "packages/mobilewright"
+  },
   "files": [
     "dist"
   ],

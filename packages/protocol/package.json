@@ -15,5 +15,12 @@
     "build": "tsc -b",
     "prepublishOnly": "tsc -b"
   },
-  "files": ["dist"]
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mobile-next/mobilewright",
+    "directory": "packages/protocol"
+  },
+  "files": [
+    "dist"
+  ]
 }

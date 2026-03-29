@@ -15,7 +15,14 @@
     "build": "tsc -b",
     "prepublishOnly": "tsc -b"
   },
-  "files": ["dist"],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mobile-next/mobilewright",
+    "directory": "packages/test"
+  },
+  "files": [
+    "dist"
+  ],
   "dependencies": {
     "mobilewright": "^0.0.1",
     "@mobilewright/core": "^0.0.1",
