@@ -369,38 +369,6 @@ function checkIOSSimulators(): CheckResult | null {
   }
 }
 
-function checkCocoaPods(): CheckResult | null {
-  if (!isMac()) return null;
-
-  const podPath = which('pod');
-  if (!podPath) {
-    return check('cocoapods', 'CocoaPods', 'ios', 'warning', {
-      details: 'Required for iOS projects with native dependencies (React Native, Capacitor, etc.).',
-      fix: ['brew install cocoapods'],
-    });
-  }
-  return check('cocoapods', 'CocoaPods', 'ios', 'ok', {
-    version: run('pod', ['--version']),
-    path: podPath,
-  });
-}
-
-function checkWatchman(): CheckResult | null {
-  if (!isMac()) return null;
-
-  const p = which('watchman');
-  if (!p) {
-    return check('watchman', 'Watchman', 'ios', 'warning', {
-      details: 'Recommended for React Native — watches filesystem for fast refresh.',
-      fix: ['brew install watchman'],
-    });
-  }
-  return check('watchman', 'Watchman', 'ios', 'ok', {
-    version: run('watchman', ['--version']),
-    path: p,
-  });
-}
-
 // ─── Android checks ───────────────────────────────────────────────────────────
 
 function checkJava(): CheckResult {
@@ -547,14 +515,31 @@ function checkADB(): CheckResult {
   const match   = raw?.match(/Android Debug Bridge version ([^\n\r]+)/);
   const version = match ? match[1].trim() : null;
 
-  // Gil's note: on some machines `adb devices` hangs/times out, which kills mobilecli.
-  // We verify it responds within the timeout — an empty device list is fine.
-  const devicesRaw = run(adbPath, ['devices'], { timeout: 6000 });
+  return check('adb', 'ADB (Android Debug Bridge)', 'android', 'ok', { version, path: adbPath });
+}
+
+function checkADBDevices(): CheckResult {
+  const androidHome = process.env['ANDROID_HOME'] ?? process.env['ANDROID_SDK_ROOT'];
+  let adbPath: string | null = null;
+
+  if (androidHome) {
+    const candidate = join(androidHome, 'platform-tools', isWin() ? 'adb.exe' : 'adb');
+    if (pathExists(candidate)) adbPath = candidate;
+  }
+  if (!adbPath) adbPath = which('adb');
+
+  if (!adbPath) {
+    return check('adb_devices', 'ADB Devices', 'android', 'error', {
+      details: 'ADB not found — install it first.',
+    });
+  }
+
+  const devicesRaw = run(adbPath, ['devices'], { timeout: 10000 });
+
   if (devicesRaw === null) {
-    return check('adb', 'ADB (Android Debug Bridge)', 'android', 'error', {
-      version,
+    return check('adb_devices', 'ADB Devices', 'android', 'error', {
       path: adbPath,
-      details: '`adb devices` timed out or failed. The ADB server may be stuck.',
+      details: '`adb devices` did not complete within 10 seconds. The ADB server may be stuck.',
       fix: [
         `${adbPath} kill-server`,
         `${adbPath} start-server`,
@@ -563,7 +548,23 @@ function checkADB(): CheckResult {
     });
   }
 
-  return check('adb', 'ADB (Android Debug Bridge)', 'android', 'ok', { version, path: adbPath });
+  if (!devicesRaw.includes('List of devices attached')) {
+    return check('adb_devices', 'ADB Devices', 'android', 'error', {
+      path: adbPath,
+      details: '`adb devices` returned unexpected output (missing "List of devices attached").',
+    });
+  }
+
+  const lines = devicesRaw.split('\n').slice(1); // skip "List of devices attached"
+  const deviceIds = lines
+    .map(line => line.trim().split(/\s+/)[0])
+    .filter(id => id && id.length > 0);
+
+  return check('adb_devices', 'ADB Devices', 'android', 'ok', {
+    path: adbPath,
+    version: `${deviceIds.length} device${deviceIds.length !== 1 ? 's' : ''} connected`,
+    details: deviceIds.length > 0 ? JSON.stringify(deviceIds) : null,
+  });
 }
 
 function checkAndroidEmulator(): CheckResult {
@@ -770,13 +771,12 @@ export function gatherChecks(categoryFilter?: CheckCategory): CheckResult[] {
     checkXcode(),
     checkXcodeCLT(),
     checkIOSSimulators(),
-    checkCocoaPods(),
-    checkWatchman(),
     // Android
     checkJava(),
     checkJavaHome(),
     checkAndroidHome(),
     checkADB(),
+    checkADBDevices(),
     checkAndroidEmulator(),
     checkAndroidSDKPlatforms(),
     checkAndroidBuildTools(),
