@@ -23,8 +23,5 @@
     "mobilewright": "*",
     "tsx": "^4.0.0",
     "typescript": "^5.7.0"
-  },
-  "dependencies": {
-    "@mobilenext/mobilecli": "^0.1.62"
   }
 }
