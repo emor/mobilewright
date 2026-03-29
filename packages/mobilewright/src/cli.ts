@@ -81,7 +81,7 @@ program
   .action(async (report: string | undefined, opts: { host: string; port: string }) => {
     const { program: pwProgram } = await import('playwright/lib/program');
     const args = ['node', 'playwright', 'show-report'];
-    if (report) args.push(report);
+    args.push(report || HTML_REPORT_DIR);
     args.push('--host', opts.host, '--port', opts.port);
     await pwProgram.parseAsync(args);
   });
