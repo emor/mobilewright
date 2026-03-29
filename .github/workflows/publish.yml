@@ -18,13 +18,7 @@ jobs:
           node-version: 24
           registry-url: https://registry.npmjs.org
       - name: Set version from tag
-        run: |
-          VERSION=${GITHUB_REF_NAME#v}
-          npm version $VERSION --no-git-tag-version
-          for pkg in packages/*/; do
-            (cd "$pkg" && npm version $VERSION --no-git-tag-version)
-          done
-          node utils/set-versions.js $VERSION
+        run: node utils/set-versions.js ${GITHUB_REF_NAME#v}
       - run: npm install --ignore-scripts
       - run: npm audit
       - run: npm run build
