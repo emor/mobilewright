@@ -331,10 +331,18 @@ function checkIOSSimulators(): CheckResult | null {
     });
   }
 
-  const raw = run('xcrun', ['simctl', 'list', 'devices', '--json']);
+  // Also validates xcrun/simctl responds — a hang here would block mobilecli
+  const raw = run('xcrun', ['simctl', 'list', 'devices', '--json'], { timeout: 10000 });
   if (!raw) {
-    return check('ios_simulators', 'iOS Simulators', 'ios', 'warning', {
-      details: 'Could not query simulators. Ensure Xcode is fully installed.',
+    return check('ios_simulators', 'iOS Simulators', 'ios', 'error', {
+      details: '`xcrun simctl list` timed out or failed. Xcode may need repair.',
+      fix: [
+        'sudo xcode-select --reset',
+        'sudo xcodebuild -license accept',
+        '# If the issue persists, reinstall Xcode Command Line Tools:',
+        'sudo rm -rf /Library/Developer/CommandLineTools',
+        'xcode-select --install',
+      ],
     });
   }
 
@@ -538,6 +546,22 @@ function checkADB(): CheckResult {
   const raw     = run(adbPath, ['version']);
   const match   = raw?.match(/Android Debug Bridge version ([^\n\r]+)/);
   const version = match ? match[1].trim() : null;
+
+  // Gil's note: on some machines `adb devices` hangs/times out, which kills mobilecli.
+  // We verify it responds within the timeout — an empty device list is fine.
+  const devicesRaw = run(adbPath, ['devices'], { timeout: 6000 });
+  if (devicesRaw === null) {
+    return check('adb', 'ADB (Android Debug Bridge)', 'android', 'error', {
+      version,
+      path: adbPath,
+      details: '`adb devices` timed out or failed. The ADB server may be stuck.',
+      fix: [
+        `${adbPath} kill-server`,
+        `${adbPath} start-server`,
+        '# Then re-run: npx mobilewright doctor',
+      ],
+    });
+  }
 
   return check('adb', 'ADB (Android Debug Bridge)', 'android', 'ok', { version, path: adbPath });
 }
