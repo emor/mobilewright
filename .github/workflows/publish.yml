@@ -26,6 +26,7 @@ jobs:
           done
           node utils/set-versions.js $VERSION
       - run: npm install --ignore-scripts
+      - run: npm audit
       - run: npm run build
       - run: npm publish --access public --provenance
         working-directory: packages/protocol
