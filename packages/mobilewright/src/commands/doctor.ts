@@ -488,15 +488,17 @@ function checkAndroidHome(): CheckResult {
   });
 }
 
-function checkADB(): CheckResult {
+function findAdb(): string | null {
   const androidHome = process.env['ANDROID_HOME'] ?? process.env['ANDROID_SDK_ROOT'];
-  let adbPath: string | null = null;
-
   if (androidHome) {
     const candidate = join(androidHome, 'platform-tools', isWin() ? 'adb.exe' : 'adb');
-    if (pathExists(candidate)) adbPath = candidate;
+    if (pathExists(candidate)) return candidate;
   }
-  if (!adbPath) adbPath = which('adb');
+  return which('adb');
+}
+
+function checkADB(): CheckResult {
+  const adbPath = findAdb();
 
   if (!adbPath) {
     return check('adb', 'ADB (Android Debug Bridge)', 'android', 'error', {
@@ -519,14 +521,7 @@ function checkADB(): CheckResult {
 }
 
 function checkADBDevices(): CheckResult {
-  const androidHome = process.env['ANDROID_HOME'] ?? process.env['ANDROID_SDK_ROOT'];
-  let adbPath: string | null = null;
-
-  if (androidHome) {
-    const candidate = join(androidHome, 'platform-tools', isWin() ? 'adb.exe' : 'adb');
-    if (pathExists(candidate)) adbPath = candidate;
-  }
-  if (!adbPath) adbPath = which('adb');
+  const adbPath = findAdb();
 
   if (!adbPath) {
     return check('adb_devices', 'ADB Devices', 'android', 'error', {
