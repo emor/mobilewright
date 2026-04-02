@@ -1,27 +1,21 @@
 import { join, dirname } from 'node:path';
-import { existsSync } from 'node:fs';
+import { createRequire } from 'node:module';
 
 /**
- * Walk up from cwd looking for `node_modules/@mobilenext/mobilecli`.
- * Uses cwd instead of import.meta.url so it works when Playwright
- * transpiles the source to CJS.
+ * Resolve the mobilecli binary using Node's module resolution so it works
+ * from npx caches, global installs, and local node_modules alike.
  */
 export function resolveMobilecliBinary(): string {
-  let dir = process.cwd();
-  while (true) {
-    const candidate = join(dir, 'node_modules', '@mobilenext', 'mobilecli');
-    if (existsSync(join(candidate, 'package.json'))) {
-      const binary = process.platform === 'darwin'
-        ? (process.arch === 'arm64' ? 'mobilecli-darwin-arm64' : 'mobilecli-darwin-amd64')
-        : process.platform === 'linux'
-          ? (process.arch === 'arm64' ? 'mobilecli-linux-arm64' : 'mobilecli-linux-amd64')
-          : null;
-      if (!binary) throw new Error(`Unsupported platform: ${process.platform}-${process.arch}`);
-      return join(candidate, 'bin', binary);
-    }
-    const parent = dirname(dir);
-    if (parent === dir) break;
-    dir = parent;
+  let binary: string;
+  switch (`${process.platform}-${process.arch}`) {
+    case 'darwin-arm64':  binary = 'mobilecli-darwin-arm64';  break;
+    case 'darwin-x64':    binary = 'mobilecli-darwin-amd64';  break;
+    case 'linux-arm64':   binary = 'mobilecli-linux-arm64';   break;
+    case 'linux-x64':     binary = 'mobilecli-linux-amd64';   break;
+    default: throw new Error(`Unsupported platform: ${process.platform}-${process.arch}`);
   }
-  throw new Error('@mobilenext/mobilecli is not installed');
+
+  const _require = createRequire(import.meta.url);
+  const pkgJson = _require.resolve('@mobilenext/mobilecli/package.json');
+  return join(dirname(pkgJson), 'bin', binary);
 }
