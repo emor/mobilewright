@@ -10,6 +10,7 @@ import { createRequire } from 'node:module';
 import { MobilecliDriver, DEFAULT_URL } from '@mobilewright/driver-mobilecli';
 import { ensureMobilecliReachable } from './server.js';
 import { gatherChecks, renderTerminal, renderJSON } from './commands/doctor.js';
+import { brandReport } from './reporter.js';
 
 const _require = createRequire(import.meta.url);
 const _pkg = _require('../package.json') as { version: string };
@@ -74,6 +75,16 @@ program
     if (opts.passWithNoTests) c.cliPassWithNoTests = true;
 
     const status = await runAllTestsWithConfig(config);
+
+    // Post-process HTML report with Mobilewright branding
+    if (opts.reporter && (opts.reporter as string).split(',').some(r => r.trim() === 'html')) {
+      try {
+        brandReport(resolve(process.cwd(), HTML_REPORT_DIR));
+      } catch {
+        // Report branding is best-effort; don't fail the test run
+      }
+    }
+
     const exitCode = status === 'interrupted' ? 130 : status === 'passed' ? 0 : 1;
     process.exit(exitCode);
   });
