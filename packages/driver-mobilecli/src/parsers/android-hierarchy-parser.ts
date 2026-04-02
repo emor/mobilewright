@@ -37,11 +37,13 @@ function androidNodeFromAttrs(
     : fullClass;
 
   // resource-id often looks like "com.example:id/login_button"
-  // Extract just the id part after "/"
+  // Extract just the id part after "/" for short matching
   const rawResourceId = attrs.get('resource-id') || '';
   const identifier = rawResourceId.includes('/')
     ? rawResourceId.split('/').pop()
     : rawResourceId || undefined;
+  // Keep the full resource-id for exact matching (e.g. Appium migration)
+  const resourceId = rawResourceId || undefined;
 
   const contentDesc = attrs.get('content-desc') || '';
   const text = attrs.get('text') || '';
@@ -55,6 +57,7 @@ function androidNodeFromAttrs(
     type,
     label: contentDesc || undefined,
     identifier: identifier || undefined,
+    resourceId,
     value: undefined,
     text: text || undefined,
     placeholder: attrs.get('hint') || undefined,
@@ -62,6 +65,9 @@ function androidNodeFromAttrs(
     isEnabled: attrs.get('enabled') === 'true',
     isSelected: attrs.get('selected') === 'true' ? true : undefined,
     isFocused: attrs.get('focused') === 'true' ? true : undefined,
+    isChecked: attrs.get('checkable') === 'true'
+      ? attrs.get('checked') === 'true'
+      : undefined,
     bounds: parseBounds(attrs.get('bounds') || ''),
     children: [],
     raw,

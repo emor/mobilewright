@@ -264,3 +264,114 @@ test.describe('queryAll with flat hierarchy (bounds-based chains)', () => {
     expect(results).toHaveLength(0);
   });
 });
+
+test.describe('React Native Android role mapping', () => {
+  const rnTree: ViewNode[] = [
+    node({
+      type: 'ReactViewGroup',
+      label: 'Login',
+      raw: { clickable: 'true', accessible: 'true' },
+      children: [
+        node({ type: 'ReactTextView', text: 'Hello World' }),
+        node({
+          type: 'ReactEditText',
+          placeholder: 'Enter email',
+          raw: { hint: 'Enter email' },
+        }),
+        node({ type: 'ReactImageView', label: 'Avatar' }),
+        node({
+          type: 'ReactScrollView',
+          children: [
+            node({ type: 'ReactTextView', text: 'Item 1' }),
+          ],
+        }),
+      ],
+    }),
+    node({
+      type: 'ReactViewGroup',
+      label: 'Container',
+      raw: { clickable: 'false', accessible: 'false' },
+    }),
+  ];
+
+  test('ReactViewGroup with clickable=true matches button role', () => {
+    const results = queryAll(rnTree, { kind: 'role', value: 'button' });
+    expect(results).toHaveLength(1);
+    expect(results[0].label).toBe('Login');
+  });
+
+  test('ReactViewGroup without clickable does not match button role', () => {
+    const results = queryAll(rnTree, { kind: 'role', value: 'button', name: 'Container' });
+    expect(results).toHaveLength(0);
+  });
+
+  test('ReactTextView matches text role', () => {
+    const results = queryAll(rnTree, { kind: 'role', value: 'text' });
+    expect(results).toHaveLength(2);
+  });
+
+  test('ReactEditText matches textfield role', () => {
+    const results = queryAll(rnTree, { kind: 'role', value: 'textfield' });
+    expect(results).toHaveLength(1);
+  });
+
+  test('ReactImageView matches image role', () => {
+    const results = queryAll(rnTree, { kind: 'role', value: 'image' });
+    expect(results).toHaveLength(1);
+    expect(results[0].label).toBe('Avatar');
+  });
+
+  test('ReactScrollView matches list role', () => {
+    const results = queryAll(rnTree, { kind: 'role', value: 'list' });
+    expect(results).toHaveLength(1);
+  });
+});
+
+test.describe('placeholder strategy', () => {
+  const tree: ViewNode[] = [
+    node({ type: 'TextField', placeholder: 'Enter email' }),
+    node({ type: 'TextField', placeholder: 'Enter password' }),
+    node({ type: 'Button', label: 'Submit' }),
+  ];
+
+  test('finds by exact placeholder', () => {
+    const results = queryAll(tree, { kind: 'placeholder', value: 'Enter email' });
+    expect(results).toHaveLength(1);
+    expect(results[0].placeholder).toBe('Enter email');
+  });
+
+  test('finds by substring placeholder (exact=false)', () => {
+    const results = queryAll(tree, { kind: 'placeholder', value: 'enter', exact: false });
+    expect(results).toHaveLength(2);
+  });
+
+  test('returns empty when no placeholder matches', () => {
+    const results = queryAll(tree, { kind: 'placeholder', value: 'Phone' });
+    expect(results).toHaveLength(0);
+  });
+});
+
+test.describe('testId with resourceId', () => {
+  const tree: ViewNode[] = [
+    node({
+      type: 'EditText',
+      identifier: 'login_button',
+      resourceId: 'com.example:id/login_button',
+    }),
+  ];
+
+  test('matches short identifier', () => {
+    const results = queryAll(tree, { kind: 'testId', value: 'login_button' });
+    expect(results).toHaveLength(1);
+  });
+
+  test('matches full resourceId', () => {
+    const results = queryAll(tree, { kind: 'testId', value: 'com.example:id/login_button' });
+    expect(results).toHaveLength(1);
+  });
+
+  test('does not match partial resourceId', () => {
+    const results = queryAll(tree, { kind: 'testId', value: 'example:id/login_button' });
+    expect(results).toHaveLength(0);
+  });
+});

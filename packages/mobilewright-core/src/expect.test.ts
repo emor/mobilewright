@@ -220,6 +220,164 @@ test.describe('expect', () => {
     });
   });
 
+  test.describe('toBeDisabled', () => {
+    test('passes when element is disabled', async () => {
+      const disabledTree: ViewNode[] = [
+        node({
+          type: 'Window',
+          children: [
+            node({
+              type: 'Button',
+              label: 'Submit',
+              identifier: 'disabledBtn',
+              isEnabled: false,
+              bounds: { x: 20, y: 100, width: 200, height: 50 },
+            }),
+          ],
+        }),
+      ];
+      const driver = createMockDriver(disabledTree);
+      const locator = new Locator(driver, { kind: 'testId', value: 'disabledBtn' });
+      await mwExpect(locator).toBeDisabled();
+    });
+
+    test('fails when element is enabled', async () => {
+      const driver = createMockDriver(hierarchy);
+      const locator = new Locator(driver, { kind: 'testId', value: 'submitBtn' });
+      await expect(
+        mwExpect(locator).toBeDisabled({ timeout: 200 }),
+      ).rejects.toThrow(ExpectError);
+    });
+  });
+
+  test.describe('toBeSelected', () => {
+    test('passes when element is selected', async () => {
+      const selectedTree: ViewNode[] = [
+        node({
+          type: 'Window',
+          children: [
+            node({
+              type: 'Tab',
+              label: 'Home',
+              identifier: 'homeTab',
+              isSelected: true,
+              bounds: { x: 0, y: 0, width: 100, height: 44 },
+            }),
+          ],
+        }),
+      ];
+      const driver = createMockDriver(selectedTree);
+      const locator = new Locator(driver, { kind: 'testId', value: 'homeTab' });
+      await mwExpect(locator).toBeSelected();
+    });
+  });
+
+  test.describe('toHaveFocus', () => {
+    test('passes when element is focused', async () => {
+      const focusedTree: ViewNode[] = [
+        node({
+          type: 'Window',
+          children: [
+            node({
+              type: 'TextField',
+              label: 'Email',
+              identifier: 'emailField',
+              isFocused: true,
+              bounds: { x: 0, y: 0, width: 300, height: 44 },
+            }),
+          ],
+        }),
+      ];
+      const driver = createMockDriver(focusedTree);
+      const locator = new Locator(driver, { kind: 'testId', value: 'emailField' });
+      await mwExpect(locator).toHaveFocus();
+    });
+  });
+
+  test.describe('toBeChecked', () => {
+    test('passes when element is checked', async () => {
+      const checkedTree: ViewNode[] = [
+        node({
+          type: 'Window',
+          children: [
+            node({
+              type: 'Checkbox',
+              label: 'Agree',
+              identifier: 'agreeCheck',
+              isChecked: true,
+              bounds: { x: 0, y: 0, width: 44, height: 44 },
+            }),
+          ],
+        }),
+      ];
+      const driver = createMockDriver(checkedTree);
+      const locator = new Locator(driver, { kind: 'testId', value: 'agreeCheck' });
+      await mwExpect(locator).toBeChecked();
+    });
+
+    test('not.toBeChecked passes when unchecked', async () => {
+      const uncheckedTree: ViewNode[] = [
+        node({
+          type: 'Window',
+          children: [
+            node({
+              type: 'Checkbox',
+              label: 'Agree',
+              identifier: 'agreeCheck',
+              isChecked: false,
+              bounds: { x: 0, y: 0, width: 44, height: 44 },
+            }),
+          ],
+        }),
+      ];
+      const driver = createMockDriver(uncheckedTree);
+      const locator = new Locator(driver, { kind: 'testId', value: 'agreeCheck' });
+      await mwExpect(locator).not.toBeChecked();
+    });
+  });
+
+  test.describe('toHaveValue', () => {
+    test('passes with exact value match', async () => {
+      const valueTree: ViewNode[] = [
+        node({
+          type: 'Window',
+          children: [
+            node({
+              type: 'Slider',
+              label: 'Volume',
+              identifier: 'volumeSlider',
+              value: '75%',
+              bounds: { x: 0, y: 0, width: 300, height: 44 },
+            }),
+          ],
+        }),
+      ];
+      const driver = createMockDriver(valueTree);
+      const locator = new Locator(driver, { kind: 'testId', value: 'volumeSlider' });
+      await mwExpect(locator).toHaveValue('75%');
+    });
+
+    test('passes with regex value match', async () => {
+      const valueTree: ViewNode[] = [
+        node({
+          type: 'Window',
+          children: [
+            node({
+              type: 'Slider',
+              label: 'Volume',
+              identifier: 'volumeSlider',
+              value: '75%',
+              bounds: { x: 0, y: 0, width: 300, height: 44 },
+            }),
+          ],
+        }),
+      ];
+      const driver = createMockDriver(valueTree);
+      const locator = new Locator(driver, { kind: 'testId', value: 'volumeSlider' });
+      await mwExpect(locator).toHaveValue(/\d+%/);
+    });
+  });
+
   test.describe('auto-retry', () => {
     test('retries until assertion passes', async () => {
       const initialTree: ViewNode[] = [

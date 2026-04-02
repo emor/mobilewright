@@ -7,6 +7,7 @@ export type LocatorStrategy =
   | { kind: 'text'; value: string | RegExp; exact?: boolean }
   | { kind: 'type'; value: string }
   | { kind: 'role'; value: string; name?: string | RegExp }
+  | { kind: 'placeholder'; value: string; exact?: boolean }
   | { kind: 'chain'; parent: LocatorStrategy; child: LocatorStrategy };
 
 /**
@@ -74,7 +75,9 @@ function matchesStrategy(
         : node.label === strategy.value;
 
     case 'testId':
-      return node.identifier === strategy.value;
+      if (node.identifier === strategy.value) return true;
+      if (node.resourceId && node.resourceId === strategy.value) return true;
+      return false;
 
     case 'text': {
       const nodeText = node.text ?? node.label ?? node.value ?? '';
@@ -102,6 +105,12 @@ function matchesStrategy(
       }
       return true;
 
+    case 'placeholder':
+      if (!node.placeholder) return false;
+      return strategy.exact === false
+        ? node.placeholder.toLowerCase().includes(strategy.value.toLowerCase())
+        : node.placeholder === strategy.value;
+
     case 'chain':
       // Handled above in queryAll
       return false;
@@ -110,13 +119,13 @@ function matchesStrategy(
 
 const ROLE_TYPE_MAP: Record<string, string[]> = {
   button: ['button', 'imagebutton'],
-  textfield: ['textfield', 'securetextfield', 'edittext', 'searchfield'],
-  text: ['statictext', 'textview', 'text'],
-  image: ['image', 'imageview'],
+  textfield: ['textfield', 'securetextfield', 'edittext', 'searchfield', 'reactedittext'],
+  text: ['statictext', 'textview', 'text', 'reacttextview'],
+  image: ['image', 'imageview', 'reactimageview'],
   switch: ['switch', 'toggle'],
   checkbox: ['checkbox'],
   slider: ['slider', 'seekbar'],
-  list: ['table', 'collectionview', 'listview', 'recyclerview', 'scrollview'],
+  list: ['table', 'collectionview', 'listview', 'recyclerview', 'scrollview', 'reactscrollview'],
   listitem: ['cell', 'linearlayout', 'relativelayout', 'other'],
   tab: ['tab', 'tabbar'],
   link: ['link'],
@@ -126,6 +135,16 @@ const ROLE_TYPE_MAP: Record<string, string[]> = {
 function matchesRole(node: ViewNode, role: string): boolean {
   const normalizedType = node.type.toLowerCase();
   const roleTypes = ROLE_TYPE_MAP[role.toLowerCase()];
+
+  // React Native's ReactViewGroup is used for everything — only treat it as a
+  // button when the element is explicitly marked clickable or accessible.
+  if (normalizedType === 'reactviewgroup') {
+    if (role.toLowerCase() === 'button') {
+      return node.raw?.['clickable'] === 'true' || node.raw?.['accessible'] === 'true';
+    }
+    return false;
+  }
+
   if (roleTypes) {
     return roleTypes.includes(normalizedType);
   }
