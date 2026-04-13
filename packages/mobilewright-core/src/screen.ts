@@ -4,6 +4,7 @@ import type {
   ScreenshotOptions,
   SwipeDirection,
   SwipeOptions,
+  ViewNode,
 } from '@mobilewright/protocol';
 import { Locator, type LocatorOptions } from './locator.js';
 
@@ -62,5 +63,11 @@ export class Screen {
 
   async goBack(): Promise<void> {
     return this.driver.pressButton('BACK');
+  }
+  
+  // ─── View tree ──────────────────────────────────────────────────
+
+  async viewTree(): Promise<ViewNode[]> {
+    return this.driver.getViewHierarchy();
   }
 }
