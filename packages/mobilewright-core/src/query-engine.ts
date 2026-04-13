@@ -122,6 +122,9 @@ function matchesStrategy(
     case 'chain':
       // Handled above in queryAll
       return false;
+
+    default:
+      throw new Error(`Unknown strategy kind: ${(strategy as any).kind}`);
   }
 }
 
