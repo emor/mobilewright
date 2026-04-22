@@ -1,4 +1,11 @@
-## [0.0.23] (2026-04-20)
+## [0.0.25] (2026-04-22)
+* General: Add `installApps` config option to install apps before launching
+* General: Add `autoAppLaunch` config option to skip automatic app launch (default: `true`)
+* Fix: `loadConfig()` now unwraps double-wrapped default exports caused by Playwright's transpiler
+* Fix: Handle `allocating` state from mobile-use.com, wait until device is ready
+* Fix: `installApp` on mobile-use driver now uploads via `uploads.create`
+
+## [0.0.24] (2026-04-22)
 * General: Add `@mobilewright/driver-mobile-use` package for mobile-use.com cloud device support
 * General: Refactor `ConnectionConfig` — replace required `deviceId` with required `platform`, optional `deviceId`, `deviceName`, `osVersion`
 * General: Move device resolution into drivers — mobilecli resolves locally
